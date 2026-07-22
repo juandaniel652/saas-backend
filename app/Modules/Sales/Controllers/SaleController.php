@@ -35,8 +35,8 @@ final class SaleController
     public function store(Request $request, array $params): Response
     {
         $auth = $this->auth($request);
-        $result = $this->saleService->create($auth->companyId, $request->all());
-
+        $result = $this->saleService->create($auth->companyId, $request->all(), $auth->userId);
+    
         return ResponseHelper::success($result, 'Venta registrada', 201);
     }
 

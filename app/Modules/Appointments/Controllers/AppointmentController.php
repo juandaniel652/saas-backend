@@ -40,7 +40,7 @@ final class AppointmentController
     public function store(Request $request, array $params): Response
     {
         $auth = $this->auth($request);
-        $id = $this->appointmentService->schedule($auth->companyId, $request->all());
+        $id = $this->appointmentService->schedule($auth->companyId, $request->all(), $auth->userId);
 
         return ResponseHelper::success(['id' => $id], 'Turno agendado', 201);
     }

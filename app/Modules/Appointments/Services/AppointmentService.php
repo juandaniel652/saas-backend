@@ -21,6 +21,10 @@ use App\Modules\Services\Services\ServiceCatalogService;
 use App\Core\Validation\Validator;
 use DateTimeImmutable;
 
+use App\Core\Events\EventDispatcher;
+use App\Modules\Appointments\Events\AppointmentCancelled;
+use App\Modules\Appointments\Events\AppointmentCreated;
+
 final class AppointmentService
 {
     public function __construct(
@@ -31,6 +35,7 @@ final class AppointmentService
         private readonly ServiceCatalogService $serviceCatalog,
         private readonly ScheduleRepository $scheduleRepository,
         private readonly AppointmentPolicy $policy,
+        private readonly EventDispatcher $events,
     ) {
     }
 
@@ -52,7 +57,7 @@ final class AppointmentService
         return $appointment;
     }
 
-    public function schedule(int $companyId, array $rawData): int
+    public function schedule(int $companyId, array $rawData, ?int $userId = null): int
     {
         Validator::make($rawData, [
             'branch_id' => 'required|integer',
@@ -91,7 +96,7 @@ final class AppointmentService
             ]);
         }
 
-        return $this->appointments->create(
+        $appointmentId = $this->appointments->create(
             companyId: $companyId,
             branchId: $dto->branchId,
             clientId: $dto->clientId,
@@ -102,6 +107,18 @@ final class AppointmentService
             status: AppointmentStatus::Confirmed->value,
             notes: $dto->notes,
         );
+
+        $this->events->dispatch(new AppointmentCreated(
+            appointmentId: $appointmentId,
+            companyId: $companyId,
+            userId: $userId,
+            clientId: $dto->clientId,
+            employeeId: $dto->employeeId,
+            serviceId: $dto->serviceId,
+            startsAt: $range->start->format('Y-m-d H:i:s'),
+        ));
+
+        return $appointmentId;
     }
 
     public function cancel(int $id, int $companyId, AuthenticatedUser $auth): void
@@ -118,6 +135,13 @@ final class AppointmentService
         }
 
         $this->appointments->updateStatus($id, AppointmentStatus::Cancelled->value);
+        $this->events->dispatch(new AppointmentCancelled(
+        appointmentId: $id,
+        companyId: $companyId,
+        userId: $auth->userId,
+        clientId: (int) $appointment['client_id'],
+    ));
+    
     }
 
     private function assertWithinWorkingHours(int $employeeId, TimeRange $range): void

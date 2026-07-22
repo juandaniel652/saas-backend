@@ -12,6 +12,8 @@ use App\Modules\Payments\Repositories\PaymentRepository;
 use App\Modules\Sales\Enums\PaymentStatus;
 use App\Modules\Sales\Enums\SaleStatus;
 use App\Modules\Sales\Repositories\SaleRepository;
+use App\Core\Events\EventDispatcher;
+use App\Modules\Payments\Events\PaymentRegistered;
 use DateTimeImmutable;
 use Throwable;
 
@@ -23,6 +25,7 @@ final class PaymentService
         private readonly PaymentRepository $payments,
         private readonly SaleRepository $sales,
         private readonly Connection $connection,
+        private readonly EventDispatcher $events,
     ) {
     }
 
@@ -34,7 +37,7 @@ final class PaymentService
         return $this->payments->findBySale($saleId);
     }
 
-    public function register(int $saleId, int $companyId, array $rawData): int
+    public function register(int $saleId, int $companyId, array $rawData, ?int $userId = null): int
     {
         Validator::make($rawData, [
             'amount' => 'required',
@@ -83,6 +86,15 @@ final class PaymentService
             $this->sales->updatePaymentStatus($saleId, $newStatus->value);
 
             $pdo->commit();
+
+            $this->events->dispatch(new PaymentRegistered(
+                paymentId: $paymentId,
+                saleId: $saleId,
+                companyId: $companyId,
+                userId: $userId,
+                amount: $dto->amount,
+                method: $dto->method,
+            ));
 
             return $paymentId;
         } catch (Throwable $e) {

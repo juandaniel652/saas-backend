@@ -42,6 +42,8 @@ final class AuthService
         'sales.manage' => 'Registrar ventas',
         'sales.cancel' => 'Cancelar ventas',
         'payments.manage' => 'Registrar pagos',
+        'reports.view' => 'Ver reportes',
+        'audit.view' => 'Ver auditoria',
     ];
 
     public function __construct(

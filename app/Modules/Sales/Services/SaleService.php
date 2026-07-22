@@ -15,6 +15,9 @@ use App\Modules\Sales\Enums\SaleItemType;
 use App\Modules\Sales\Enums\SaleStatus;
 use App\Modules\Sales\Repositories\SaleRepository;
 use App\Modules\Services\Repositories\ServiceCatalogRepository;
+use App\Core\Events\EventDispatcher;
+use App\Modules\Sales\Events\SaleCreated;
+
 use Throwable;
 
 final class SaleService
@@ -24,6 +27,7 @@ final class SaleService
         private readonly ProductRepository $products,
         private readonly ServiceCatalogRepository $serviceCatalog,
         private readonly Connection $connection,
+        private readonly EventDispatcher $events,
     ) {
     }
 
@@ -45,7 +49,7 @@ final class SaleService
         return ['sale' => $sale, 'items' => $this->sales->itemsForSale($id)];
     }
 
-    public function create(int $companyId, array $rawData): array
+    public function create(int $companyId, array $rawData, ?int $userId = null): array
     {
         Validator::make($rawData, [
             'branch_id' => 'required|integer',
@@ -110,6 +114,14 @@ final class SaleService
             }
 
             $pdo->commit();
+
+            $this->events->dispatch(new SaleCreated(
+                saleId: $saleId,
+                companyId: $companyId,
+                userId: $userId,
+                invoiceNumber: $invoiceNumber,
+                total: $total,
+            ));
 
             return ['id' => $saleId, 'invoice_number' => $invoiceNumber, 'total' => $total];
         } catch (Throwable $e) {
