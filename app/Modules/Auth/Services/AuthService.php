@@ -35,6 +35,13 @@ final class AuthService
         'appointments.view' => 'Ver turnos',
         'appointments.manage' => 'Administrar turnos',
         'appointments.cancel' => 'Cancelar turnos',
+        'products.view' => 'Ver productos',
+        'products.manage' => 'Administrar productos',
+        'stock.manage' => 'Administrar stock',
+        'sales.view' => 'Ver ventas',
+        'sales.manage' => 'Registrar ventas',
+        'sales.cancel' => 'Cancelar ventas',
+        'payments.manage' => 'Registrar pagos',
     ];
 
     public function __construct(
