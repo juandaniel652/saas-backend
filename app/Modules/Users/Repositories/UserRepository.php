@@ -95,4 +95,43 @@ final class UserRepository
         );
         $stmt->execute(['user_id' => $userId, 'role_id' => $roleId]);
     }
+
+    /** @return array<int, array<string, mixed>> */
+    public function findByCompany(int $companyId): array
+    {
+        $stmt = $this->connection->pdo()->prepare(
+            'SELECT id, company_id, name, email, created_at FROM users WHERE company_id = :company_id ORDER BY name',
+        );
+        $stmt->execute(['company_id' => $companyId]);
+    
+        return $stmt->fetchAll();
+    }
+    
+    /** @return array<string, mixed>|null */
+    public function findByIdAndCompany(int $id, int $companyId): ?array
+    {
+        $stmt = $this->connection->pdo()->prepare(
+            'SELECT id, company_id, name, email, created_at FROM users WHERE id = :id AND company_id = :company_id',
+        );
+        $stmt->execute(['id' => $id, 'company_id' => $companyId]);
+    
+        $row = $stmt->fetch();
+    
+        return $row === false ? null : $row;
+    }
+    
+    /** @param int[] $roleIds */
+    public function syncRoles(int $userId, array $roleIds): void
+    {
+        $pdo = $this->connection->pdo();
+    
+        $delete = $pdo->prepare('DELETE FROM user_roles WHERE user_id = :user_id');
+        $delete->execute(['user_id' => $userId]);
+    
+        $insert = $pdo->prepare('INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)');
+    
+        foreach ($roleIds as $roleId) {
+            $insert->execute(['user_id' => $userId, 'role_id' => $roleId]);
+        }
+    }
 }

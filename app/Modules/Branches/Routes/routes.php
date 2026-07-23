@@ -19,4 +19,10 @@ return function (Router $router): void {
         [BranchController::class, 'store'],
         [AuthMiddleware::class, new PermissionMiddleware(['branches.create'])],
     );
+
+    $router->put(
+        '/api/v1/branches/{id}',
+        [BranchController::class, 'update'],
+        [AuthMiddleware::class, new PermissionMiddleware(['branches.manage'])],
+    );
 };

@@ -33,4 +33,14 @@ final class BranchController
 
         return ResponseHelper::success(['id' => $id], 'Sucursal creada', 201);
     }
+
+    public function update(Request $request, array $params): Response
+    {
+        /** @var AuthenticatedUser $auth */
+        $auth = $request->attribute('auth');
+    
+        $this->branchService->update((int) $params['id'], $auth->companyId, $request->all());
+    
+        return ResponseHelper::success(null, 'Sucursal actualizada');
+    }
 }

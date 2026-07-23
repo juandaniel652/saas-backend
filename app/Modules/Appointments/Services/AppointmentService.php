@@ -24,6 +24,8 @@ use DateTimeImmutable;
 use App\Core\Events\EventDispatcher;
 use App\Modules\Appointments\Events\AppointmentCancelled;
 use App\Modules\Appointments\Events\AppointmentCreated;
+use App\Modules\Branches\Repositories\BranchRepository;
+use App\Modules\Settings\Services\SettingsService;
 
 final class AppointmentService
 {
@@ -36,6 +38,8 @@ final class AppointmentService
         private readonly ScheduleRepository $scheduleRepository,
         private readonly AppointmentPolicy $policy,
         private readonly EventDispatcher $events,
+        private readonly BranchRepository $branches,
+        private readonly SettingsService $settings,
     ) {
     }
 
@@ -81,6 +85,11 @@ final class AppointmentService
             ]);
         }
 
+        // 2.5. La sucursal pertenece a la empresa
+        if (!$this->branches->belongsToCompany($dto->branchId, $companyId)) {
+            throw new ValidationException(['branch_id' => ['La sucursal indicada no pertenece a tu empresa']]);
+        }
+
         // 3. Calcular rango horario segun la duracion del servicio
         $startsAt = new DateTimeImmutable($dto->startsAt);
         $endsAt = $startsAt->modify('+' . (int) $service['duration_minutes'] . ' minutes');
@@ -89,10 +98,14 @@ final class AppointmentService
         // 4. El horario pedido cae dentro de la disponibilidad del empleado
         $this->assertWithinWorkingHours($dto->employeeId, $range);
 
-        // 5. No se pisa con otro turno del mismo empleado
-        if ($this->appointments->hasOverlap($dto->employeeId, $range->start->format('Y-m-d H:i:s'), $range->end->format('Y-m-d H:i:s'))) {
+        // 5. No se pisa con otro turno del mismo empleado, respetando el buffer configurado
+        $bufferMinutes = $this->settings->getInt($companyId, 'appointment_buffer_minutes');
+        $checkStart = $range->start->modify("-{$bufferMinutes} minutes");
+        $checkEnd = $range->end->modify("+{$bufferMinutes} minutes");
+        
+        if ($this->appointments->hasOverlap($dto->employeeId, $checkStart->format('Y-m-d H:i:s'), $checkEnd->format('Y-m-d H:i:s'))) {
             throw new ValidationException([
-                'starts_at' => ['El empleado ya tiene un turno en ese horario'],
+                'starts_at' => ['El empleado ya tiene un turno en ese horario (o no respeta el tiempo de buffer configurado)'],
             ]);
         }
 

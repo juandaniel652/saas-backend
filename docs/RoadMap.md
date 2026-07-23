@@ -163,9 +163,9 @@ Objetivo: completar el ecosistema del producto.
 |------|--------|
 | Fase 0 | ✅ Completada |
 | Fase 1 | ✅ Completada |
-| Fase 2 | 🚧 En desarrollo |
-| Fase 3 | ⏳ Pendiente |
-| Fase 4 | ⏳ Pendiente |
-| Fase 5 | ⏳ Pendiente |
+| Fase 2 | ✅ Completada |
+| Fase 3 | ✅ Completada  |
+| Fase 4 | ✅ Completada  |
+| Fase 5 | 🚧 En desarrollo|
 | Fase 6 | ⏳ Pendiente |
 | Fase 7 | ⏳ Pendiente |

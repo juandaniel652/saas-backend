@@ -32,4 +32,20 @@ final class PermissionRepository
 
         return (int) $existing->fetchColumn();
     }
+
+    /** @param string[] $slugs
+     *  @return array<int, array<string, mixed>>
+     */
+    public function findBySlugs(array $slugs): array
+    {
+        if ($slugs === []) {
+            return [];
+        }
+    
+        $placeholders = implode(',', array_fill(0, count($slugs), '?'));
+        $stmt = $this->connection->pdo()->prepare("SELECT * FROM permissions WHERE slug IN ({$placeholders})");
+        $stmt->execute(array_values($slugs));
+    
+        return $stmt->fetchAll();
+    }
 }

@@ -17,7 +17,7 @@ use App\Modules\Sales\Repositories\SaleRepository;
 use App\Modules\Services\Repositories\ServiceCatalogRepository;
 use App\Core\Events\EventDispatcher;
 use App\Modules\Sales\Events\SaleCreated;
-
+use App\Modules\Branches\Repositories\BranchRepository;
 use Throwable;
 
 final class SaleService
@@ -28,6 +28,7 @@ final class SaleService
         private readonly ServiceCatalogRepository $serviceCatalog,
         private readonly Connection $connection,
         private readonly EventDispatcher $events,
+        private readonly BranchRepository $branches,
     ) {
     }
 
@@ -56,6 +57,10 @@ final class SaleService
         ])->validateOrFail();
 
         $dto = CreateSaleDTO::fromArray($rawData);
+
+        if (!$this->branches->belongsToCompany($dto->branchId, $companyId)) {
+            throw new ValidationException(['branch_id' => ['La sucursal indicada no pertenece a tu empresa']]);
+        }
 
         if ($dto->items === []) {
             throw new ValidationException(['items' => ['La venta debe tener al menos un item']]);

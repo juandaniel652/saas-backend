@@ -23,7 +23,12 @@ final class AuthService
     private const BASE_PERMISSIONS = [
         'branches.view' => 'Ver sucursales',
         'branches.create' => 'Crear sucursales',
+        'branches.manage' => 'Editar sucursales',
         'roles.manage' => 'Administrar roles y permisos',
+        'users.view' => 'Ver usuarios',
+        'users.manage' => 'Administrar usuarios',
+        'settings.view' => 'Ver configuracion',
+        'settings.manage' => 'Administrar configuracion',
         'clients.view' => 'Ver clientes',
         'clients.manage' => 'Administrar clientes',
         'employees.view' => 'Ver empleados',
